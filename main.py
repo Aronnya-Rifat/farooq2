@@ -44,7 +44,13 @@ def setup_driver(download_dir):
     }
     chrome_options.add_experimental_option("prefs", prefs)
 
+
     service = Service(ChromeDriverManager().install())
+
+    CHROME_BIN = "/usr/bin/chromium"
+    CHROMEDRIVER_BIN = "/usr/bin/chromedriver"
+
+    service = Service(CHROMEDRIVER_BIN)
     return webdriver.Chrome(service=service, options=chrome_options)
 def download_redfin_data(driver):
     """Automates the Redfin download process."""
