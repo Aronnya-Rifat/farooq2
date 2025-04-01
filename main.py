@@ -427,12 +427,14 @@ def delete_all_csv():
 
 # === MAIN EXECUTION ===
 def main():
-    CREDENTIALS_FILE = os.getenv("GOOGLE_CREDENTIALS_FILE")
+    SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
+    SCOPES = ['https://www.googleapis.com/auth/drive.file']
+
 
     # Example: Load credentials in your code
 
 
-    credentials = Credentials.from_service_account_file(CREDENTIALS_FILE)
+
     script_url = "https://script.google.com/macros/s/AKfycbxSySb5SAv5Gl1Z5Gxb4jfHpMoDjCxBn8TAsjVli4RreWf_clqLJ3WkHkbvkEVzoqCD/exec"
     response = requests.post(script_url, json={"action": "unhideColumns"})
     print(response.text)  # Should print "Columns Unhidden Successfully"
@@ -445,7 +447,7 @@ def main():
     output_csv = "redfin.csv"
     scrape_redfin_data(input_csv, output_csv, folder_path, 5)
 
-    CREDENTIALS_FILE =  credentials
+    CREDENTIALS_FILE =  SERVICE_ACCOUNT_FILE
     SPREADSHEET_ID = "1lHnsqMM94omtG_WcXhixVPluETrFtZBcRJ-Hpdag5mM"
     SHEET_NAME = "redfin_2025-03-01-22-36-12"
     CSV_FILE = "redfin.csv"
