@@ -9,25 +9,13 @@ RUN apt-get update && apt-get install -y \
     wget \
     unzip \
     curl \
-    gnupg \
-    lsb-release \
-    ca-certificates \
+    chromium \
+    chromium-driver \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Google Chrome
-RUN wget -qO - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
-    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list && \
-    apt-get update && apt-get install -y google-chrome-stable
-
-# Install ChromeDriver manually (fixed version)
-RUN CHROMEDRIVER_VERSION="114.0.5735.90" && \
-    wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
-    unzip /tmp/chromedriver.zip -d /usr/bin/ && \
-    rm /tmp/chromedriver.zip
-
-# Set environment variables for Chrome and ChromeDriver
-ENV CHROME_BIN=/usr/bin/google-chrome
-ENV CHROMEDRIVER_BIN=/usr/bin/chromedriver
+# Set environment variables for Chrome and Chromedriver
+ENV CHROME_BIN=/usr/bin/chromium
+ENV CHROMEDRIVER_BIN=/usr/lib/chromium/chromedriver
 
 # Copy the dependencies file and install Python packages
 COPY requirements.txt .
