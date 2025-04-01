@@ -23,16 +23,26 @@ from datetime import datetime
 from google.oauth2.service_account import Credentials
 from gspread import Cell
 
+
 def setup_driver(download_dir):
-    """Configures and returns a Selenium WebDriver instance."""
+    """Configures and returns a Selenium WebDriver instance for Render."""
     chrome_options = Options()
+
+    # Render requires headless mode
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
     chrome_options.add_argument("--start-maximized")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
     chrome_options.add_experimental_option("useAutomationExtension", False)
-    chrome_options.add_argument(
-        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36")
 
+    # Set user agent to prevent detection
+    chrome_options.add_argument(
+        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    )
+
+    # Set download directory
     prefs = {
         "download.default_directory": download_dir,
         "download.prompt_for_download": False,
@@ -41,8 +51,15 @@ def setup_driver(download_dir):
     }
     chrome_options.add_experimental_option("prefs", prefs)
 
-    service = Service(ChromeDriverManager().install())
+    # Explicit paths to Chromium and ChromeDriver
+    CHROME_BIN = "/usr/bin/chromium"
+    CHROMEDRIVER_BIN = "/usr/bin/chromedriver"
+
+    service = Service(CHROMEDRIVER_BIN)
+
     return webdriver.Chrome(service=service, options=chrome_options)
+
+
 def download_redfin_data(driver):
     """Automates the Redfin download process."""
     url = "https://www.redfin.com/county/1647/MO/Jackson-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=39.23710209353751:38.83281595697974:-94.10456377540925:-94.60859637048101"
