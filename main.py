@@ -242,7 +242,7 @@ def sync_redfin_with_google_sheet(
 ):
     try:
         # === 🔹 Authenticate and Access Google Sheets ===
-        creds = Credentials.from_service_account_file(credentials_file, scopes=["https://www.googleapis.com/auth/spreadsheets"])
+        creds = Credentials.from_service_account_info(credentials_file, scopes=["https://www.googleapis.com/auth/spreadsheets"])
         client = gspread.authorize(creds)
         sheet = client.open_by_key(spreadsheet_id).worksheet(sheet_name)
 
