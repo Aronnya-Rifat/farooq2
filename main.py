@@ -436,7 +436,7 @@ def delete_all_csv():
 
 # === MAIN EXECUTION ===
 def main():
-    SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS"])
+    SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
 
 
