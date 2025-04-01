@@ -256,7 +256,7 @@ def sync_redfin_with_google_sheet(
         print(f"❌ Google Sheets API error: {e}")
         return
     except Exception as e:
-        print(f"❌ Unexpected error during authentication or sheet access: {e}")
+        print(f"❌3 Unexpected error during authentication or sheet access: {e}")
         return
 
     try:
@@ -269,7 +269,7 @@ def sync_redfin_with_google_sheet(
         print(f"❌ CSV file '{csv_file}' not found.")
         return
     except Exception as e:
-        print(f"❌ Error reading data: {e}")
+        print(f"❌2 Error reading data: {e}")
         return
 
     try:
@@ -415,7 +415,7 @@ def sync_redfin_with_google_sheet(
 
 
     except Exception as e:
-        print(f"❌ An unexpected error occurred: {e}")
+        print(f"❌1 An unexpected error occurred: {e}")
 
 
 def delete_all_csv():
