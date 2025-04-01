@@ -445,7 +445,7 @@ def main():
     output_csv = "redfin.csv"
     scrape_redfin_data(input_csv, output_csv, folder_path, 5)
 
-    CREDENTIALS_FILE =  json.loads(credentials)
+    CREDENTIALS_FILE =  credentials
     SPREADSHEET_ID = "1lHnsqMM94omtG_WcXhixVPluETrFtZBcRJ-Hpdag5mM"
     SHEET_NAME = "redfin_2025-03-01-22-36-12"
     CSV_FILE = "redfin.csv"
