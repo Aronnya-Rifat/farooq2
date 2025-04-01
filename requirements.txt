@@ -1,0 +1,7 @@
+bs4
+gspread
+pandas
+protobuf
+Requests
+selenium
+webdriver_manager
