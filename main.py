@@ -52,12 +52,47 @@ def setup_driver(download_dir):
 
     service = Service(CHROMEDRIVER_BIN)
     return webdriver.Chrome(service=service, options=chrome_options)
-def download_redfin_data(driver):
-    """Automates the Redfin download process."""
-    url = "https://www.redfin.com/county/1647/MO/Jackson-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=39.23710209353751:38.83281595697974:-94.10456377540925:-94.60859637048101"
-    driver.get(url)
-    time.sleep(10)
+def download_and_merge_redfin_data():
+    COUNTY_URLS = {
+        "Jackson County": "https://www.redfin.com/county/1647/MO/Jackson-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=39.23710209353751:38.83281595697974:-94.10456377540925:-94.60859637048101",
+        "Clay County": "https://www.redfin.com/county/1623/MO/Clay-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=39.4561248969278:39.10960168335659:-94.21042181320779:-94.60761308742642",
+        "Wyandotte County": "https://www.redfin.com/county/1109/KS/Wyandotte-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=39.20228685639552:38.99083325655661:-94.58967061228006:-94.90928788466434",
+        "Cass County": "https://www.redfin.com/county/1618/MO/Cass-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=38.84720367446206:38.4450876188291:-94.06407332564088:-94.61304711807497",
+        "Johnson County": "https://www.redfin.com/county/1650/MO/Johnson-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=38.93811156437477:38.55600887794147:-93.49284823885266:-94.12963477619786"
+    }
+
+    download_path = os.path.expanduser(r"C:\Users\user\PycharmProjects\Farooq_Testing")
+    driver = setup_driver(download_path)
     wait = WebDriverWait(driver, 20)
+    all_dataframes = []
+
+    def login_redfin():
+
+
+        ActionChains(driver).move_to_element(download_button).click().perform()
+        time.sleep(2)
+        print("✅ Logging in")
+
+        print("🔐 Logging into Redfin...")
+        email = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="emailInput"]')))
+        email.send_keys("jordonmedina708@gmail.com")
+        time.sleep(2)
+
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//button/span[contains(text(), "Continue")]'))).click()
+        time.sleep(3)
+
+        password = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="passwordInput"]')))
+        password.send_keys("jm12345!@#$%")
+        time.sleep(2)
+
+        wait.until(EC.element_to_be_clickable((By.XPATH, '//button/span[contains(text(), "Continue")]'))).click()
+        time.sleep(5)
+        print("✅ Logged in.")
+
+    # Login once on first page
+    first_county = next(iter(COUNTY_URLS))
+    driver.get(COUNTY_URLS[first_county])
+    time.sleep(10)
 
     try:
         download_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="download-and-save"]')))
@@ -66,40 +101,58 @@ def download_redfin_data(driver):
         driver.find_element(By.TAG_NAME, "body").send_keys(Keys.PAGE_UP)
         time.sleep(random.uniform(1.5, 3))
         driver.execute_script("window.scrollBy(0, 500);")
-        ActionChains(driver).move_to_element(download_button).click().perform()
-        time.sleep(2)
-        print("✅ Logging in")
-
-        email_field = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="emailInput"]')))
-        email_field.send_keys("jordonmedina708@gmail.com")
-        time.sleep(2)
-
-        continue_button = wait.until(
-            EC.element_to_be_clickable((By.XPATH, '//button/span[contains(text(), "Continue")]')))
-        continue_button.click()
-        time.sleep(3)
-
-        password_field = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="passwordInput"]')))
-        password_field.send_keys("jm12345!@#$%")
-        time.sleep(2)
-
-        continue_button = wait.until(
-            EC.element_to_be_clickable((By.XPATH, '//button/span[contains(text(), "Continue")]')))
-        continue_button.click()
-        time.sleep(5)
-        print("✅ Logged in successfully!")
-
-        download_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="download-and-save"]')))
-        driver.execute_script("arguments[0].scrollIntoView();", download_button)
-        time.sleep(1)
-        driver.find_element(By.TAG_NAME, "body").send_keys(Keys.PAGE_UP)
-        time.sleep(random.uniform(1.5, 3))
-        driver.execute_script("window.scrollBy(0, 500);")
-        ActionChains(driver).move_to_element(download_button).click().perform()
-        time.sleep(5)
-        print("✅ Download initiated!")
+        login_redfin()
     except Exception as e:
-        print("❌ Error during download:", e)
+        print("❌ Login failed:", e)
+        driver.quit()
+        return
+
+    for county, url in COUNTY_URLS.items():
+        print(f"🌎 Processing {county}...")
+        driver.get(url)
+        time.sleep(10)
+
+        try:
+            download_button = wait.until(EC.element_to_be_clickable((By.XPATH, '//*[@id="download-and-save"]')))
+            driver.execute_script("arguments[0].scrollIntoView();", download_button)
+            time.sleep(2)
+            driver.find_element(By.TAG_NAME, "body").send_keys(Keys.PAGE_UP)
+            time.sleep(random.uniform(1.5, 3))
+            driver.execute_script("window.scrollBy(0, 500);")
+            ActionChains(driver).move_to_element(download_button).click().perform()
+            time.sleep(8)
+        except Exception as e:
+            print(f"⚠️ Failed to download from {county}: {e}")
+            continue
+
+        # Wait and grab the latest CSV
+        time.sleep(5)
+        try:
+            files = sorted(
+                [os.path.join(download_path, f) for f in os.listdir(download_path) if f.endswith(".csv")],
+                key=os.path.getmtime,
+                reverse=True
+            )
+            latest_file = files[0]
+
+            df = pd.read_csv(latest_file, skiprows=[1])
+            df.insert(1, 'County', county)
+            all_dataframes.append(df)
+            print(f"✅ Processed: {county}")
+        except Exception as e:
+            print(f"❌ Error processing CSV for {county}: {e}")
+
+    # Merge all dataframes
+    if all_dataframes:
+        combined_df = pd.concat(all_dataframes, ignore_index=True)
+        output_file = os.path.join(download_path, "redfin.csv")
+        combined_df.to_csv(output_file, index=False)
+        print(f"📁 Merged file saved as: {output_file}")
+    else:
+        print("⚠️ No data to merge.")
+
+    driver.quit()
+    print("🎉 All done!")
 
 
 def wait_for_csv(folder_path, new_name="redfin.csv"):
@@ -122,7 +175,7 @@ def automate_redfin(folder_path):
     driver = setup_driver(folder_path)
 
     # First attempt to download data
-    download_redfin_data(driver)
+    download_and_merge_redfin_data()
 
     # Wait for the CSV file, retrying download if not found
     attempts = 0
@@ -135,7 +188,7 @@ def automate_redfin(folder_path):
         print(f"🔄 Attempt {attempts + 1}/{max_attempts}: CSV not found, retrying download...")
 
         # Retry downloading the data
-        download_redfin_data(driver)
+        download_and_merge_redfin_data()
 
         attempts += 1
         time.sleep(delay)
@@ -403,7 +456,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbxSySb5SAv5Gl1Z5Gxb4jfHpMoDjCxBn8TAsjVli4RreWf_clqLJ3WkHkbvkEVzoqCD/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbzt6VtaLIpHQb2AWTT0fgqods3jtJ7IvAegbYQ42CSkHCIWSMqHPXgydMWfYfknZmjo/exec"
 
             response = requests.get(script_url)
 
@@ -444,21 +497,21 @@ def main():
 
 
 
-    script_url = "https://script.google.com/macros/s/AKfycbxSySb5SAv5Gl1Z5Gxb4jfHpMoDjCxBn8TAsjVli4RreWf_clqLJ3WkHkbvkEVzoqCD/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbzt6VtaLIpHQb2AWTT0fgqods3jtJ7IvAegbYQ42CSkHCIWSMqHPXgydMWfYfknZmjo/exec"
     response = requests.post(script_url, json={"action": "unhideColumns"})
     print(response.text)  # Should print "Columns Unhidden Successfully"
 
 
     folder_path = r"/app"
     delete_all_csv()
-    automate_redfin(folder_path)
+    download_and_merge_redfin_data()
     input_csv = "redfin.csv"
     output_csv = "redfin.csv"
     scrape_redfin_data(input_csv, output_csv, folder_path, 5)
 
     CREDENTIALS_FILE =  SERVICE_ACCOUNT_FILE
     SPREADSHEET_ID = "1lHnsqMM94omtG_WcXhixVPluETrFtZBcRJ-Hpdag5mM"
-    SHEET_NAME = "redfin_2025-03-01-22-36-12"
+    SHEET_NAME = "script file"
     CSV_FILE = "redfin.csv"
 
     sync_redfin_with_google_sheet(CREDENTIALS_FILE,SPREADSHEET_ID,SHEET_NAME,CSV_FILE)
@@ -472,8 +525,6 @@ def main():
         print("Error:", response.status_code, response.text)
     # Hide Columns
 
-    response = requests.post(script_url, json={"action": "hideColumns"})
-    print(response.text)  # Should print "Columns Hidden Successfully"
     response = requests.post(script_url, json={"action": "removeBlankRows"})
     print(response.text)  # Should print "Columns Hidden Successfully"
 
