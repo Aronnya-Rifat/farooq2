@@ -456,7 +456,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbzt6VtaLIpHQb2AWTT0fgqods3jtJ7IvAegbYQ42CSkHCIWSMqHPXgydMWfYfknZmjo/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbwmVfb_4hfWdWzwciobQ-JVauwxlps3N00ZV3CCPIEEgzW2NgmssGpCHJQRxX57IGij/exec"
 
             response = requests.get(script_url)
 
@@ -497,7 +497,7 @@ def main():
 
 
 
-    script_url = "https://script.google.com/macros/s/AKfycbzt6VtaLIpHQb2AWTT0fgqods3jtJ7IvAegbYQ42CSkHCIWSMqHPXgydMWfYfknZmjo/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbwmVfb_4hfWdWzwciobQ-JVauwxlps3N00ZV3CCPIEEgzW2NgmssGpCHJQRxX57IGij/exec"
     response = requests.post(script_url, json={"action": "unhideColumns"})
     print(response.text)  # Should print "Columns Unhidden Successfully"
 
