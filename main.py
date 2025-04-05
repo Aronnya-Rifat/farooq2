@@ -61,7 +61,7 @@ def download_and_merge_redfin_data():
         "Johnson County": "https://www.redfin.com/county/1650/MO/Johnson-County/filter/property-type=house,max-price=200k,min-beds=2,min-sqft=750-sqft,hoa=0,viewport=38.93811156437477:38.55600887794147:-93.49284823885266:-94.12963477619786"
     }
 
-    download_path = os.path.expanduser(r"C:\Users\user\PycharmProjects\Farooq_Testing")
+    download_path = os.path.expanduser(r"/app")
     driver = setup_driver(download_path)
     wait = WebDriverWait(driver, 20)
     all_dataframes = []
