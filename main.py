@@ -456,7 +456,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbwmVfb_4hfWdWzwciobQ-JVauwxlps3N00ZV3CCPIEEgzW2NgmssGpCHJQRxX57IGij/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbzckSmIhFFmXnjDNKMHIzMgU6jTsmVPMqHt4SBVqVvNoNKZgq6xsBu_X5156qmi9nHX/exec"
 
             response = requests.get(script_url)
 
@@ -491,15 +491,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-
-
-    # Example: Load credentials in your code
-
-
-
-    script_url = "https://script.google.com/macros/s/AKfycbwmVfb_4hfWdWzwciobQ-JVauwxlps3N00ZV3CCPIEEgzW2NgmssGpCHJQRxX57IGij/exec"
-    response = requests.post(script_url, json={"action": "unhideColumns"})
-    print(response.text)  # Should print "Columns Unhidden Successfully"
+    script_url = "https://script.google.com/macros/s/AKfycbzckSmIhFFmXnjDNKMHIzMgU6jTsmVPMqHt4SBVqVvNoNKZgq6xsBu_X5156qmi9nHX/exec"
 
 
     folder_path = r"/app"
