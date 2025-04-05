@@ -456,7 +456,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbw1Qi7Tq5G51T77RuHrRcvdq8QvzYn-_z3PXMXQ80kFW_Hry5MIkcQeN23w8Qef6wOs/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbwjBJY9pNHyocmRvjMXucWxeKizPV2ZJuHlq1f3TM0RfLBY9aiR9G2q9U1KQ9HFkW3N/exec"
 
             response = requests.get(script_url)
 
@@ -491,7 +491,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    script_url = "https://script.google.com/macros/s/AKfycbw1Qi7Tq5G51T77RuHrRcvdq8QvzYn-_z3PXMXQ80kFW_Hry5MIkcQeN23w8Qef6wOs/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbwjBJY9pNHyocmRvjMXucWxeKizPV2ZJuHlq1f3TM0RfLBY9aiR9G2q9U1KQ9HFkW3N/exec"
 
 
     folder_path = r"/app"
