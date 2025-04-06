@@ -517,6 +517,7 @@ def main():
     print(response.text)  # Should print "Columns Hidden Successfully"
     print("✅ Process completed successfully!")
 if __name__ == "__main__":
+    script_url = "https://script.google.com/macros/s/AKfycbx4AAGGR8Vk1YGtCz0n_EOkSMLSC58g6NaEKMZ6hm0zqF9KspPaWpKQ2NVEnJKXuP2l/exec"
     main()
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
     print(response.text)
