@@ -333,7 +333,7 @@ def sync_redfin_with_google_sheet(
         csv_columns = list(df_sheet.columns)
         if "avg ARV/sqft" in csv_columns:
             csv_columns.remove("avg ARV/sqft")
-            csv_columns.insert(28, "avg ARV/sqft")
+            csv_columns.insert(29, "avg ARV/sqft")
         if "OLD PRICE" not in df_csv.columns:
             df_csv["OLD PRICE"] = ""
         if "OLD PRICE" in df_sheet.columns:
@@ -456,7 +456,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbwjBJY9pNHyocmRvjMXucWxeKizPV2ZJuHlq1f3TM0RfLBY9aiR9G2q9U1KQ9HFkW3N/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbwn1WYweXXkgF3GWPsfR4KIWkxIeshEFbT81AMFe78030ld-lDwsGgB-al0kuLfFC5_/exec"
 
             response = requests.get(script_url)
 
@@ -491,7 +491,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    script_url = "https://script.google.com/macros/s/AKfycbwjBJY9pNHyocmRvjMXucWxeKizPV2ZJuHlq1f3TM0RfLBY9aiR9G2q9U1KQ9HFkW3N/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbwn1WYweXXkgF3GWPsfR4KIWkxIeshEFbT81AMFe78030ld-lDwsGgB-al0kuLfFC5_/exec"
 
 
     folder_path = r"/app"
