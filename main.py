@@ -456,15 +456,10 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbzQv0ilgwmEVpGUoTy2yYy1elymIeIbRSOND-5IteKTnsyV13OARpZHCanRGuSOBHaF/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbx4AAGGR8Vk1YGtCz0n_EOkSMLSC58g6NaEKMZ6hm0zqF9KspPaWpKQ2NVEnJKXuP2l/exec"
 
-            response = requests.get(script_url)
-
-            if response.status_code == 200:
-                print("Success:", response.text)
-                sync_redfin_with_google_sheet(credentials_file, spreadsheet_id, sheet_name, csv_file)
-            else:
-                print("Error:", response.status_code, response.text)
+            response = requests.post(script_url, json={"action": "addEmptyRow"})
+            print(response.text)
 
 
     except Exception as e:
@@ -491,7 +486,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    script_url = "https://script.google.com/macros/s/AKfycbzQv0ilgwmEVpGUoTy2yYy1elymIeIbRSOND-5IteKTnsyV13OARpZHCanRGuSOBHaF/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbx4AAGGR8Vk1YGtCz0n_EOkSMLSC58g6NaEKMZ6hm0zqF9KspPaWpKQ2NVEnJKXuP2l/exec"
 
 
     folder_path = r"/app"
@@ -508,7 +503,8 @@ def main():
 
     sync_redfin_with_google_sheet(CREDENTIALS_FILE,SPREADSHEET_ID,SHEET_NAME,CSV_FILE)
     print("✅ Process completed successfully!")
-
+    response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
+    print(response.text)
     response = requests.get(script_url)
 
     if response.status_code == 200:
@@ -516,10 +512,11 @@ def main():
     else:
         print("Error:", response.status_code, response.text)
     # Hide Columns
-
+    response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
+    print(response.text)
     response = requests.post(script_url, json={"action": "removeBlankRows"})
     print(response.text)  # Should print "Columns Hidden Successfully"
-
+    
 if __name__ == "__main__":
     main()
 
