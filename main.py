@@ -502,7 +502,6 @@ def main():
     CSV_FILE = "redfin.csv"
 
     sync_redfin_with_google_sheet(CREDENTIALS_FILE,SPREADSHEET_ID,SHEET_NAME,CSV_FILE)
-    print("✅ Process completed successfully!")
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
     print(response.text)
     response = requests.get(script_url)
@@ -516,8 +515,9 @@ def main():
     print(response.text)
     response = requests.post(script_url, json={"action": "removeBlankRows"})
     print(response.text)  # Should print "Columns Hidden Successfully"
-    
+    print("✅ Process completed successfully!")
 if __name__ == "__main__":
     main()
-
+    response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
+    print(response.text)
 # Example usage:
