@@ -456,7 +456,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbx4AAGGR8Vk1YGtCz0n_EOkSMLSC58g6NaEKMZ6hm0zqF9KspPaWpKQ2NVEnJKXuP2l/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbzCpAZ-I2MSF0QrYnqDQuZcfVNXbes8BT-dfbohDIjT_AymrOe1Oh3H0uoHFbIZR4QW/exec"
 
             response = requests.post(script_url, json={"action": "addEmptyRow"})
             print(response.text)
@@ -486,7 +486,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    script_url = "https://script.google.com/macros/s/AKfycbx4AAGGR8Vk1YGtCz0n_EOkSMLSC58g6NaEKMZ6hm0zqF9KspPaWpKQ2NVEnJKXuP2l/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbzCpAZ-I2MSF0QrYnqDQuZcfVNXbes8BT-dfbohDIjT_AymrOe1Oh3H0uoHFbIZR4QW/exec"
 
 
     folder_path = r"/app"
@@ -517,7 +517,7 @@ def main():
     print(response.text)  # Should print "Columns Hidden Successfully"
     print("✅ Process completed successfully!")
 if __name__ == "__main__":
-    script_url = "https://script.google.com/macros/s/AKfycbx4AAGGR8Vk1YGtCz0n_EOkSMLSC58g6NaEKMZ6hm0zqF9KspPaWpKQ2NVEnJKXuP2l/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbzCpAZ-I2MSF0QrYnqDQuZcfVNXbes8BT-dfbohDIjT_AymrOe1Oh3H0uoHFbIZR4QW/exec"
     main()
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
     print(response.text)
