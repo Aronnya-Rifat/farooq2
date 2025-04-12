@@ -243,7 +243,7 @@ def scrape_redfin_data(input_csv, output_csv, folder_path, max_attempts=3):
                     if response.status_code == 200:
                         soup = BeautifulSoup(response.text, "html.parser")
                         nearby_span = soup.find(
-                            lambda tag: tag.name == "span" and "Nearby homes similar to" in tag.text)
+                            lambda tag: tag.name == "span" and "Homes similar to" in tag.text)
 
                         if nearby_span:
                             match = re.search(r"at an average of \$(\d+)", nearby_span.text.strip())
