@@ -8,20 +8,21 @@ import time
 import re
 from google.auth.exceptions import GoogleAuthError
 from gspread.exceptions import APIError
-from selenium import webdriver
 import json
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.action_chains import ActionChains
 from webdriver_manager.chrome import ChromeDriverManager
-from bs4 import BeautifulSoup
 from datetime import datetime
 from google.oauth2.service_account import Credentials
 from gspread import Cell
+from multiprocessing import Pool
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+
 
 def setup_driver(download_dir):
     """Configures and returns a Selenium WebDriver instance."""
@@ -198,78 +199,109 @@ def automate_redfin(folder_path):
     # Cleanup by quitting the driver
     driver.quit()
 
+user_agent = (
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+    "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
 
-def scrape_redfin_data(input_csv, output_csv, folder_path, max_attempts=3):
-    """Scrapes Redfin data and retries downloading if the CSV URL column is empty."""
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Safari/537.36",
-        "Accept-Language": "en-US,en;q=0.9",
-        "Referer": "https://www.redfin.com/"
-    }
+chromedriver_path = ChromeDriverManager().install()
 
-    url_column = "URL (SEE https://www.redfin.com/buy-a-home/comparative-market-analysis FOR INFO ON PRICING)"
+
+def get_average_estimate(url):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--start-maximized")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+    chrome_options.add_experimental_option("useAutomationExtension", False)
+    chrome_options.add_argument(f"user-agent={user_agent}")
+
+    driver = None
+    try:
+        driver = webdriver.Chrome(service=Service(chromedriver_path), options=chrome_options)
+        driver.get(url)
+
+        driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 2);")
+        time.sleep(1)
+        estimate_element = WebDriverWait(driver, 10).until(
+            EC.visibility_of_element_located((By.XPATH, '//*[@id="redfin-estimate"]/div[1]/div/p'))
+        )
+        estimate_text = estimate_element.text.strip()
+        
+
+        price_range = re.findall(r"\$(\d{1,3}(?:,\d{3})*)", estimate_text)
+        
+
+        if len(price_range) < 2:
+            print(f"[WARNING] Not enough prices found on {url}")
+            return None
+
+        try:
+            lower_price = int(price_range[0].replace(",", ""))
+            higher_price = int(price_range[1].replace(",", ""))
+            print(f"[DEBUG] Parsed prices: lower={lower_price}, higher={higher_price}")
+        except ValueError as ve:
+            print(f"[ERROR] ValueError converting prices on {url}: {ve}")
+            return None
+
+        return (lower_price + higher_price) // 2
+
+    except Exception as e:
+        print(f"[ERROR] Error fetching {url}: {e}")
+        return None
+    finally:
+        if driver:
+            driver.quit()
+
+
+def scrape_redfin_data(input_csv, output_csv, max_workers=2, max_attempts=3):
+    url_column_original = "URL (SEE https://www.redfin.com/buy-a-home/comparative-market-analysis FOR INFO ON PRICING)"
 
     for attempt in range(max_attempts):
         try:
             if not os.path.exists(input_csv) or os.stat(input_csv).st_size == 0:
-                print(f"⚠️ CSV file missing or empty. Attempt {attempt + 1}/{max_attempts} to redownload.")
-                automate_redfin(folder_path)
+                print(f"CSV file missing or empty. Attempt {attempt + 1}/{max_attempts}.")
                 time.sleep(5)
                 continue
 
             df = pd.read_csv(input_csv)
-            if df.empty or df[url_column].isna().all():
-                print(f"⚠️ URL column is empty. Attempt {attempt + 1}/{max_attempts} to redownload.")
-                automate_redfin(folder_path)
+            print(f"[DEBUG] DataFrame loaded. Columns: {df.columns.tolist()}")
+
+            if df.empty or df[url_column_original].isna().all():
+                print(f"URL column is empty. Attempt {attempt + 1}/{max_attempts}.")
                 time.sleep(5)
                 continue
 
-            df = df.drop(index=0, errors='ignore')
-            df["URL_BACKUP"] = df[url_column]
-            df["avg ARV/sqft"] = None  # Ensure the column exists
+            df.rename(columns={url_column_original: "URL"}, inplace=True)
+            urls = df["URL"].fillna("").tolist()
+            print(f"Starting multiprocessing with {max_workers} workers on {len(urls)} URLs...")
 
-            for index, row in df.iterrows():
-                url = row.get(url_column, "").strip()
-                if not url:
-                    df.at[index, "avg ARV/sqft"] = "No URL"
-                    print(f"⚠️ Skipping row {index + 1}, no URL found.")
-                    continue
+            with Pool(processes=max_workers) as pool:
+                average_estimates = pool.map(get_average_estimate, urls)
 
-                print(f"🔍 Processing {index + 1}/{len(df)}: {url}")
 
-                try:
-                    response = requests.get(url, headers=headers, timeout=10)
+            # Fix: convert all column names to strings
+            df.columns = df.columns.astype(str)
 
-                    if response.status_code == 200:
-                        soup = BeautifulSoup(response.text, "html.parser")
-                        nearby_span = soup.find(
-                            lambda tag: tag.name == "span" and "Homes similar to" in tag.text)
+            while len(df.columns) < 29:
+                new_col_name = f"ExtraCol_{len(df.columns)+1}"
+                print(f"[DEBUG] Adding column: {new_col_name}")
+                df[new_col_name] = ""
 
-                        if nearby_span:
-                            match = re.search(r"at an average of \$(\d+)", nearby_span.text.strip())
-                            df.at[index, "avg ARV/sqft"] = f"${match.group(1)}" if match else "N/A"
-                            print(f"✅ Found AVG/sqft: {df.at[index, 'avg ARV/sqft']}")
-                        else:
-                            df.at[index, "avg ARV/sqft"] = "N/A"
-                            print("⚠️ 'Nearby homes similar' span not found.")
-                    else:
-                        df.at[index, "avg ARV/sqft"] = "Request Failed"
-                        print(f"❌ Request failed with status code: {response.status_code}")
-                except Exception as e:
-                    df.at[index, "avg ARV/sqft"] = f"Error: {str(e)}"
-                    print(f"❌ Error occurred: {str(e)}")
+            df.insert(28, "ARV", average_estimates)
 
-                time.sleep(1)  # Delay to avoid getting blocked
-
-            df["URL"] = df["URL_BACKUP"]
-            df.drop(columns=["URL_BACKUP"], inplace=True)
             df.to_csv(output_csv, index=False)
-            print(f"✅ Scraping completed! Results saved to {output_csv}")
+            print(f"✅ Done! Output saved to {output_csv}")
             return
-        except Exception as e:
-            print(f"❌ Error processing CSV: {str(e)}")
 
-    print("❌ Max attempts reached. Could not process the CSV.")
+        except Exception as e:
+            print(f"Error during processing: {e}")
+
+    print("❌ Max attempts reached. Could not complete scraping.")
+
+
 
 
 def format_dollar_column(col_series):
@@ -331,9 +363,9 @@ def sync_redfin_with_google_sheet(
         df_sheet = df_sheet.drop(columns=["HOA/MONTH"], errors="ignore")
 
         csv_columns = list(df_sheet.columns)
-        if "avg ARV/sqft" in csv_columns:
-            csv_columns.remove("avg ARV/sqft")
-            csv_columns.insert(29, "avg ARV/sqft")
+        if "ARV" in csv_columns:
+            csv_columns.remove("ARV")
+            csv_columns.insert(29, "ARV")
         if "OLD PRICE" not in df_csv.columns:
             df_csv["OLD PRICE"] = ""
         if "OLD PRICE" in df_sheet.columns:
@@ -357,7 +389,7 @@ def sync_redfin_with_google_sheet(
             df_csv["YEAR BUILT"] = df_csv["YEAR BUILT"].apply(
                 lambda x: str(int(float(x))) if pd.notna(x) and x.strip() != "" else "")
 
-        dollar_columns = ["PRICE", "$/SQUARE FEET", "avg ARV/sqft", "OLD PRICE"]
+        dollar_columns = ["PRICE", "$/SQUARE FEET", "ARV", "OLD PRICE"]
         for col in dollar_columns:
             if col in df_csv.columns:
                 print(f"🔹 Formatting {col}")
@@ -380,7 +412,7 @@ def sync_redfin_with_google_sheet(
         IGNORE_COLUMNS.add("interested/offer submitted")  # AU
         IGNORE_COLUMNS.add("copy offers")  # AV
         IGNORE_COLUMNS.discard("URL")
-        IGNORE_COLUMNS.discard("avg ARV/sqft")
+        IGNORE_COLUMNS.discard("ARV")
         # === 🔹 Add New Listings ===
         new_entries = df_csv[
             ~df_csv.set_index(["ADDRESS", "YEAR BUILT"]).index.isin(df_sheet.set_index(["ADDRESS", "YEAR BUILT"]).index)
@@ -456,7 +488,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycbzCpAZ-I2MSF0QrYnqDQuZcfVNXbes8BT-dfbohDIjT_AymrOe1Oh3H0uoHFbIZR4QW/exec"
+            script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
 
             response = requests.post(script_url, json={"action": "addEmptyRow"})
             print(response.text)
@@ -486,7 +518,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    script_url = "https://script.google.com/macros/s/AKfycbzCpAZ-I2MSF0QrYnqDQuZcfVNXbes8BT-dfbohDIjT_AymrOe1Oh3H0uoHFbIZR4QW/exec"
+    script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
 
 
     folder_path = r"/app"
@@ -494,7 +526,7 @@ def main():
     download_and_merge_redfin_data()
     input_csv = "redfin.csv"
     output_csv = "redfin.csv"
-    scrape_redfin_data(input_csv, output_csv, folder_path, 5)
+    scrape_redfin_data(input_csv, output_csv, 2, 5)
 
     CREDENTIALS_FILE =  SERVICE_ACCOUNT_FILE
     SPREADSHEET_ID = "1lHnsqMM94omtG_WcXhixVPluETrFtZBcRJ-Hpdag5mM"
@@ -517,7 +549,7 @@ def main():
     print(response.text)  # Should print "Columns Hidden Successfully"
     print("✅ Process completed successfully!")
 if __name__ == "__main__":
-    script_url = "https://script.google.com/macros/s/AKfycbzCpAZ-I2MSF0QrYnqDQuZcfVNXbes8BT-dfbohDIjT_AymrOe1Oh3H0uoHFbIZR4QW/exec"
+    script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
     main()
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
     print(response.text)
