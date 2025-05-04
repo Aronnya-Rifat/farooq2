@@ -545,6 +545,7 @@ def main():
     print(response.text)  # Should print "Columns Hidden Successfully"
     print("✅ Process completed successfully!")
 if __name__ == "__main__":
+    multiprocessing.set_start_method('spawn')
     script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
     main()
     response = requests.get(script_url)
