@@ -204,7 +204,7 @@ user_agent = (
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 
-chromedriver_path = ChromeDriverManager().install()
+
 
 
 def get_average_estimate(url):
@@ -220,7 +220,7 @@ def get_average_estimate(url):
 
     driver = None
     try:
-        driver = webdriver.Chrome(service=Service(chromedriver_path), options=chrome_options)
+        driver = webdriver.Chrome(service=Service("/usr/bin/chromedriver"), options=chrome_options)
         driver.get(url)
 
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 2);")
@@ -551,6 +551,7 @@ def main():
 if __name__ == "__main__":
     script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
     main()
+    response = requests.get(script_url)
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
     print(response.text)
 # Example usage:
