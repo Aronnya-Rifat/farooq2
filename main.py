@@ -241,7 +241,7 @@ def get_average_estimate(url):
         except ValueError as ve:
             print(f"[ERROR] ValueError converting prices on {url}: {ve}")
             return None
-
+        print(f"{url} ->{(lower_price + higher_price) // 2}")
         return (lower_price + higher_price) // 2
 
     except Exception as e:
