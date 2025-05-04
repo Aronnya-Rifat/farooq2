@@ -241,7 +241,7 @@ def get_average_estimate(url):
         try:
             lower_price = int(price_range[0].replace(",", ""))
             higher_price = int(price_range[1].replace(",", ""))
-            print(f"[DEBUG] Parsed prices: lower={lower_price}, higher={higher_price}")
+            
         except ValueError as ve:
             print(f"[ERROR] ValueError converting prices on {url}: {ve}")
             return None
@@ -267,7 +267,7 @@ def scrape_redfin_data(input_csv, output_csv, max_workers=2, max_attempts=3):
                 continue
 
             df = pd.read_csv(input_csv)
-            print(f"[DEBUG] DataFrame loaded. Columns: {df.columns.tolist()}")
+            
 
             if df.empty or df[url_column_original].isna().all():
                 print(f"URL column is empty. Attempt {attempt + 1}/{max_attempts}.")
