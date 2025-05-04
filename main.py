@@ -44,10 +44,6 @@ def setup_driver(download_dir):
         "safebrowsing.enabled": True
     }
     chrome_options.add_experimental_option("prefs", prefs)
-
-
-    service = Service(ChromeDriverManager().install())
-
     CHROME_BIN = "/usr/bin/chromium"
     CHROMEDRIVER_BIN = "/usr/bin/chromedriver"
 
