@@ -526,7 +526,7 @@ def main():
     download_and_merge_redfin_data()
     input_csv = "redfin.csv"
     output_csv = "redfin.csv"
-    scrape_redfin_data(input_csv, output_csv, 2, 5)
+    scrape_redfin_data(input_csv, output_csv, 1, 5)
 
     CREDENTIALS_FILE =  SERVICE_ACCOUNT_FILE
     SPREADSHEET_ID = "1lHnsqMM94omtG_WcXhixVPluETrFtZBcRJ-Hpdag5mM"
