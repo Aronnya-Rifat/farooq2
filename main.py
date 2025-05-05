@@ -200,7 +200,11 @@ user_agent = (
     "(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
 )
 
-
+def parse_price(price_str):
+    price_str = price_str.replace(",", "").upper()
+    if 'K' in price_str:
+        return int(float(price_str.replace("K", "")) * 1000)
+    return int(price_str)
 
 
 def get_average_estimate(url):
@@ -222,30 +226,26 @@ def get_average_estimate(url):
         driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 2);")
         time.sleep(1)
         estimate_element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, '//*[@id="redfin-estimate"]/div[1]/div/p'))
+            EC.visibility_of_element_located((By.XPATH, '//*[@id="redfin-estimate"]/div[2]/div[2]'))
         )
         estimate_text = estimate_element.text.strip()
-        
-
-        price_range = re.findall(r"\$(\d{1,3}(?:,\d{3})*)", estimate_text)
+        price_range = re.findall(r"\$([\d,.]+K?)", estimate_text, re.IGNORECASE)
         
 
         if len(price_range) < 2:
             print(f"[WARNING] Not enough prices found on {url}")
             return None
 
-        try:
-            lower_price = int(price_range[0].replace(",", ""))
-            higher_price = int(price_range[1].replace(",", ""))
-            
-        except ValueError as ve:
-            print(f"[ERROR] ValueError converting prices on {url}: {ve}")
-            return None
-        print(f"{url} ->{(lower_price + higher_price) // 2}")
-        return (lower_price + higher_price) // 2
+        lower_price = parse_price(price_range[0])
+        higher_price = parse_price(price_range[1])
+
+        average = (lower_price + higher_price) // 2
+        print({"URL": url, "average": average})
+        return average
 
     except Exception as e:
-        print(f"[ERROR] Error fetching {url}: {e}")
+        print(f"{url}->Error: \n"
+              f"{e}")
         return None
     finally:
         if driver:
