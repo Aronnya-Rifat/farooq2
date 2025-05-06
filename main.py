@@ -484,7 +484,7 @@ def sync_redfin_with_google_sheet(
 
         print(f"❌ Google Sheets API error during update: {e}")
         if "exceeds grid limits" in str(e):
-            script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
+            script_url = "https://script.google.com/macros/s/AKfycbxWwq1RQlPra07wK11C2gm96JJ28gMa7B9cRaD2Gfo9xi4_ZmpWD9Yc4OugJq1UBRTQ/exec"
 
             response = requests.post(script_url, json={"action": "addEmptyRow"})
             print(response.text)
@@ -514,7 +514,7 @@ def delete_all_csv():
 def main():
     SERVICE_ACCOUNT_FILE = json.loads(os.environ["GOOGLE_CREDENTIALS_FILE"])
     SCOPES = ['https://www.googleapis.com/auth/drive.file']
-    script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbxWwq1RQlPra07wK11C2gm96JJ28gMa7B9cRaD2Gfo9xi4_ZmpWD9Yc4OugJq1UBRTQ/exec"
 
 
     folder_path = r"/app"
@@ -546,7 +546,7 @@ def main():
     print("✅ Process completed successfully!")
 if __name__ == "__main__":
     
-    script_url = "https://script.google.com/macros/s/AKfycby82Smixl_KxlVkgfC9UKOgMV5jRC0cr8qxW9kK4FONsoCs0aL-Zai4GxooaLaMyOD6/exec"
+    script_url = "https://script.google.com/macros/s/AKfycbxWwq1RQlPra07wK11C2gm96JJ28gMa7B9cRaD2Gfo9xi4_ZmpWD9Yc4OugJq1UBRTQ/exec"
     main()
     response = requests.get(script_url)
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
