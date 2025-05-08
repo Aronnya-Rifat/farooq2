@@ -207,49 +207,53 @@ def parse_price(price_str):
     return int(price_str)
 
 
-def get_average_estimate(url):
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--start-maximized")
-    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-    chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-    chrome_options.add_experimental_option("useAutomationExtension", False)
-    chrome_options.add_argument(f"user-agent={user_agent}")
+def get_average_estimate(url, max_retries=5):
+    attempt = 0
+    while attempt < max_retries:
+        chrome_options = Options()
+        chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--disable-gpu")
+        chrome_options.add_argument("--no-sandbox")
+        chrome_options.add_argument("--start-maximized")
+        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
+        chrome_options.add_experimental_option("useAutomationExtension", False)
+        chrome_options.add_argument(f"user-agent={user_agent}")
 
-    driver = None
-    try:
-        driver = webdriver.Chrome(service=Service("/usr/bin/chromedriver"), options=chrome_options)
-        driver.get(url)
+        driver = None
+        try:
+            driver = webdriver.Chrome(service=service, options=chrome_options)
+            driver.get(url)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight/2);")
+            time.sleep(3)
+            driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+            time.sleep(1)
+            estimate_element = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.CSS_SELECTOR, '#redfin-estimate > div > div.comps > div:nth-child(2)'))
+            )
+            time.sleep(2)
+            estimate_text = estimate_element.text.strip()
+            price_range = re.findall(r"\$([\d,.]+K?)", estimate_text, re.IGNORECASE)
 
-        driver.execute_script("window.scrollTo(0, document.body.scrollHeight / 2);")
-        time.sleep(1)
-        estimate_element = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.XPATH, '//*[@id="redfin-estimate"]/div[2]/div[2]'))
-        )
-        estimate_text = estimate_element.text.strip()
-        price_range = re.findall(r"\$([\d,.]+K?)", estimate_text, re.IGNORECASE)
-        
+            if len(price_range) < 2:
+                raise ValueError("Price range not found.")
 
-        if len(price_range) < 2:
-            print(f"[WARNING] Not enough prices found on {url}")
-            return None
+            lower_price = parse_price(price_range[0])
+            higher_price = parse_price(price_range[1])
+            average = (lower_price + higher_price) // 2
+            print({"URL": url, "average": average})
+            return average
 
-        lower_price = parse_price(price_range[0])
-        higher_price = parse_price(price_range[1])
+        except Exception as e:
+            attempt += 1
+            print(f"[Retry {attempt}/{max_retries}] {url} -> Error: {e}")
+            if attempt == max_retries:
+                return ""
+            time.sleep(2)  # Small delay before retry
+        finally:
+            if driver:
+                driver.quit()
 
-        average = (lower_price + higher_price) // 2
-        print({"URL": url, "average": average})
-        return average
-
-    except Exception as e:
-        print(f"{url}->Error: \n"
-              f"{e}")
-        return None
-    finally:
-        if driver:
-            driver.quit()
 
 
 def scrape_redfin_data(input_csv, output_csv, max_workers=2, max_attempts=3):
