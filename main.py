@@ -209,6 +209,9 @@ def parse_price(price_str):
 
 def get_average_estimate(url, max_retries=5):
     attempt = 0
+    CHROMEDRIVER_BIN = "/usr/bin/chromedriver"
+
+    service = Service(CHROMEDRIVER_BIN)
     while attempt < max_retries:
         chrome_options = Options()
         chrome_options.add_argument("--headless")
