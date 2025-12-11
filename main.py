@@ -558,4 +558,4 @@ if __name__ == "__main__":
     response = requests.get(script_url)
     response = requests.post(script_url, json={"action": "setCheckboxesForMultipleColumns"})
     print(response.text)
-# Example usage:
+
